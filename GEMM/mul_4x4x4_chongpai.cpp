@@ -208,6 +208,32 @@ void process4x4(float *lda, float *ldb, float *c, int M, int N, int K, int index
 
 }
 
+void chongpaiA(float *originP, float *aimto, int column, int size){
+       for(int c=0; c < size; c += 4) {
+               for(int i=0; i < 4; i++) {
+					float* tempC = c * 4 + aimto;
+					float* tempP = originP  + c +i;
+                       *(tempC+ i) = *(tempP);
+                       *(tempC + 4 + i) = *(tempP + column);
+                       *(tempC + 8 * i) = *(tempP + column*2 );
+                       *(tempC + 12 * i) = *(tempP + column*3);
+               }
+       }
+}
+
+void chongpaiB(float *originP, float *aimto, int column, int size) {
+		
+       for(int c=0; c < size; c ++) {            
+				float* tempC = c * 4 + aimto;      
+				float* tempP = originP + c*column;
+               *(tempC) = *(tempP + 0);
+               *(tempC + 1) = *(tempP + 1);
+               *(tempC + 2) = *(tempP + 2);
+               *(tempC + 3) = *(tempP + 3);
+       }
+}
+
+
 void process2(float *a, float *b, float *c, int M, int N, int K) {
 	for(int m = 0; m < M; m += 8) {
 		for(int n=0; n < N; n += 8) {
@@ -222,35 +248,17 @@ void process2(float *a, float *b, float *c, int M, int N, int K) {
 	}
 }
 
-void chongpaiA(float *originP, float *aimto, int column, int size){
-
-	for(int c=0; c < size; c += 4) {
-		for(int i=0; i < 4; i++) {
-			*(aimto + 16*c/4 + i) = *(originP  + c +i);
-			*(aimto + 16*c/4 + 4 + i) = *(originP + column + c +i);
-			*(aimto + 16*c/4 + 8 * i) = *(originP + column*2 +c +i);
-			*(aimto + 16*c/4 + 12 * i) = *(originP + column*3 +c+i);
-		}
-	}
-}
-
-void chongpaiB(float *originP, float *aimto, int column, int size) {
-	for(int c=0; c < size; c ++) {                  
-	 	*(aimto + c*4) = *(originP + c*column + 0);
-		*(aimto + c*4 + 1) = *(originP + c*column + 1);
-		*(aimto + c*4 + 2) = *(originP + c*column + 2);
-		*(aimto + c*4 + 3) = *(originP + c*column + 3);
-	}
-}
 
 void process1(float *a, float *b, float *c, int M, int N, int K, float *arrayA, float *arrayB) {
     for(int m = 0; m < M; m += 4) {
         float *tempA = &A(m,0,K);
 		chongpaiA(tempA,&arrayA[m*K],K,M);
         for(int n=0; n < N; n += 4) {
+		
             float *tempB = &B(0,n,N);
 			chongpaiB(tempB,&arrayB[m * N],N,K);
-            process4x4(&arrayA[m*K], &arrayB[m * N], c, M, N, K, m, n);
+           process4x4(&arrayA[m*K], &arrayB[m * N], c, M, N, K, m, n);
+//            process4x4(tempA, tempB, c, M, N, K, m, n);
         }
     }
 }
