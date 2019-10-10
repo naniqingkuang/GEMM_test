@@ -217,6 +217,7 @@ void chongpaiA(float *originP, float *aimto, int column, int size){
                        *(tempC + 4 + i) = *(tempP + column);
                        *(tempC + 8 * i) = *(tempP + column*2 );
                        *(tempC + 12 * i) = *(tempP + column*3);
+
                }
        }
 }
