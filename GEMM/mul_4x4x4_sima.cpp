@@ -81,14 +81,14 @@ void process4x4(float *lda, float *ldb, float *c, int M, int N, int K, int index
 
     __m128 c0,c1,c2,c3;
     __m128 b0,b1,b2,b3;
-
+	
     __m128 a;
     __m128 tempAdd;
     __m128 tempMul;
 	for(int indexK = 0; indexK < K; indexK += 4) {
 
 			
-		float* smallTempB00 = (((indexK+0)*N) + tempB0);
+		float* smallTempB00 = (((indexK+0) * N) + tempB0);
 		float* smallTempB10 = (((indexK+1) * N) + tempB0);
 		float* smallTempB20 = (((indexK+2) * N) + tempB0);
 		float* smallTempB30 = (((indexK+3) * N) + tempB0);
@@ -113,12 +113,6 @@ void process4x4(float *lda, float *ldb, float *c, int M, int N, int K, int index
 		float* smallTempA13 = ((tempA1 + indexK+3));
 		float* smallTempA23 = ((tempA2 + indexK+3));
 		float* smallTempA33 = ((tempA3 + indexK+3));
-
-
-        c0 = _mm_load_ps(&c00);
-        c1 = _mm_load_ps(&c10);
-        c2 = _mm_load_ps(&c20);
-        c3 = _mm_load_ps(&c30);
 
         b0 = _mm_load_ps(smallTempB00);
         b1 = _mm_load_ps(smallTempB10);
@@ -215,8 +209,8 @@ void process2(float *a, float *b, float *c, int M, int N, int K) {
 	for(int m = 0; m < M; m += 8) {
 		for(int n=0; n < N; n += 8) {
 			for (int mi = 0; mi < 2;mi ++) {
-     			 for (int ni = 0; ni < 2; ni++) {
 					float *tempA = &A(m+mi*4,0,K);
+     			 for (int ni = 0; ni < 2; ni++) {
 					float *tempB = &B(0,n+ni*4,N);
 					process4x4(tempA, tempB, c, M, N, K, m, n);
 				}
@@ -251,7 +245,7 @@ int main() {
 		struct timeval start;
 		gettimeofday(&start, NULL);
 
-		process2(a, b, c, mm, nn, kk);
+		process1(a, b, c, mm, nn, kk);
 	
 		struct timeval end;
 		gettimeofday(&end, NULL);

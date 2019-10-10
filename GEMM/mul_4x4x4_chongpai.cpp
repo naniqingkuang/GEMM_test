@@ -2,6 +2,7 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #include <xmmintrin.h>
+#include <string.h>
 
 #define A(h,l,w) a[h * w + l]
 #define B(h,l,w) b[h * w + l]
@@ -29,9 +30,9 @@ void process4x4(float *lda, float *ldb, float *c, int M, int N, int K, int index
 
 
 	float *tempA0 = (lda);
-	float *tempA1 = (lda+K);
-	float *tempA2 = (lda+K*2);
-	float *tempA3 = (lda+K*3);
+	float *tempA1 = (lda+4);
+	float *tempA2 = (lda+4*2);
+	float *tempA3 = (lda+4*3);
 
 	float *tempB0 = ldb;
 	float *tempB1 = ldb+1;
@@ -79,52 +80,179 @@ void process4x4(float *lda, float *ldb, float *c, int M, int N, int K, int index
 	register float c32 = 0;
 	register float c33 = 0;
 
-    __m128 b;
-    __m128 a;
-    __m128 temp,temp2;
     __m128 c0,c1,c2,c3;
-	for(int indexK = 0; indexK < K; indexK ++) {
-        
-        b = _mm_load_ps(((indexK * N) + tempB0));
-        
+    __m128 b0,b1,b2,b3;
 
-        a = _mm_load1_ps(tempA0 + indexK);
-        temp = _mm_mul_ps(a,b);
-        c0 = _mm_add_ps(temp,c0);
-        
-        a = _mm_load1_ps(tempA1 + indexK);
-        temp = _mm_mul_ps(a,b);
-        c1 = _mm_add_ps(temp,c1);
-        
-        a = _mm_load1_ps(tempA2 + indexK);
-        temp = _mm_mul_ps(a,b);
-        c2 = _mm_add_ps(temp,c2);
-        
-        a = _mm_load1_ps(tempA3 + indexK);
-        temp = _mm_mul_ps(a,b);
-        c3 = _mm_add_ps(temp,c3);
-        
+    __m128 a;
+    __m128 tempAdd;
+    __m128 tempMul;
+	for(int indexK = 0; indexK < K; indexK += 4) {
+
+			
+		float* smallTempB00 = (((indexK+0) * 4) + tempB0);
+		float* smallTempB10 = (((indexK+1) * 4) + tempB0);
+		float* smallTempB20 = (((indexK+2) * 4) + tempB0);
+		float* smallTempB30 = (((indexK+3) * 4) + tempB0);
+
+		float* smallTempA00 = ((tempA0 + indexK));
+		float* smallTempA10 = ((tempA1 + indexK));
+		float* smallTempA20 = ((tempA2 + indexK));
+		float* smallTempA30 = ((tempA3 + indexK));
+
+	 	
+		float* smallTempA01 = ((tempA0 + indexK+1));
+		float* smallTempA11 = ((tempA1 + indexK+1));
+		float* smallTempA21 = ((tempA2 + indexK+1));
+		float* smallTempA31 = ((tempA3 + indexK+1));
+	 	
+		float* smallTempA02 = ((tempA0 + indexK+2));
+		float* smallTempA12 = ((tempA1 + indexK+2));
+		float* smallTempA22 = ((tempA2 + indexK+2));
+		float* smallTempA32 = ((tempA3 + indexK+2));
+	 	
+		float* smallTempA03 = ((tempA0 + indexK+3));
+		float* smallTempA13 = ((tempA1 + indexK+3));
+		float* smallTempA23 = ((tempA2 + indexK+3));
+		float* smallTempA33 = ((tempA3 + indexK+3));
+
+
+
+        b0 = _mm_load_ps(smallTempB00);
+        b1 = _mm_load_ps(smallTempB10);
+        b2 = _mm_load_ps(smallTempB20);
+        b3 = _mm_load_ps(smallTempB30);
+
+        a = _mm_load1_ps(smallTempA00);
+        tempAdd = _mm_mul_ps(a,b0);
+        c0 = _mm_add_ps(c0,tempAdd);
+
+
+        a = _mm_load1_ps(smallTempA01);
+        tempAdd = _mm_mul_ps(a,b1);
+        c0 = _mm_add_ps(c0,tempAdd);
+
+        a = _mm_load1_ps(smallTempA02);
+        tempAdd = _mm_mul_ps(a,b2);
+        c0 = _mm_add_ps(c0,tempAdd);
+
+        a = _mm_load1_ps(smallTempA03);
+        tempAdd = _mm_mul_ps(a,b3);
+        c0 = _mm_add_ps(c0,tempAdd);
+
+        //1
+        a = _mm_load1_ps(smallTempA10);
+        tempAdd = _mm_mul_ps(a,b0);
+        c1 = _mm_add_ps(c1,tempAdd);
+
+
+        a = _mm_load1_ps(smallTempA11);
+        tempAdd = _mm_mul_ps(a,b1);
+        c1 = _mm_add_ps(c1,tempAdd);
+
+        a = _mm_load1_ps(smallTempA12);
+        tempAdd = _mm_mul_ps(a,b2);
+        c1 = _mm_add_ps(c1,tempAdd);
+
+        a = _mm_load1_ps(smallTempA13);
+        tempAdd = _mm_mul_ps(a,b3);
+        c1 = _mm_add_ps(c1,tempAdd);
+
+
+        //2
+        a = _mm_load1_ps(smallTempA20);
+        tempAdd = _mm_mul_ps(a,b0);
+        c2 = _mm_add_ps(c2,tempAdd);
+
+
+        a = _mm_load1_ps(smallTempA21);
+        tempAdd = _mm_mul_ps(a,b1);
+        c2 = _mm_add_ps(c2,tempAdd);
+
+        a = _mm_load1_ps(smallTempA22);
+        tempAdd = _mm_mul_ps(a,b2);
+        c2 = _mm_add_ps(c2,tempAdd);
+
+        a = _mm_load1_ps(smallTempA23);
+        tempAdd = _mm_mul_ps(a,b3);
+        c2 = _mm_add_ps(c2,tempAdd);
+
+
+        //3
+        a = _mm_load1_ps(smallTempA30);
+        tempAdd = _mm_mul_ps(a,b0);
+        c3 = _mm_add_ps(c3,tempAdd);
+
+
+        a = _mm_load1_ps(smallTempA31);
+        tempAdd = _mm_mul_ps(a,b1);
+        c3 = _mm_add_ps(c3,tempAdd);
+
+        a = _mm_load1_ps(smallTempA32);
+        tempAdd = _mm_mul_ps(a,b2);
+        c3 = _mm_add_ps(c3,tempAdd);
+
+        a = _mm_load1_ps(smallTempA33);
+        tempAdd = _mm_mul_ps(a,b3);
+        c3 = _mm_add_ps(c3,tempAdd);
+                                
+                                
+                               
+		
 	}
-    _mm_store_ps(tempC00,c0);
-    _mm_store_ps(tempC10,c1);
-    _mm_store_ps(tempC20,c2);
-    _mm_store_ps(tempC30,c3);
+   
+                                _mm_store_ps(tempC00,c0);
+                                _mm_store_ps(tempC10,c1);
+                                _mm_store_ps(tempC20,c2);
+                                _mm_store_ps(tempC30,c3);
 
 
-}	
-void process(float *a, float *b, float *c, int M, int N, int K) {
+}
+
+void process2(float *a, float *b, float *c, int M, int N, int K) {
 	for(int m = 0; m < M; m += 8) {
 		for(int n=0; n < N; n += 8) {
-             for (int mi = 0; mi < 2;mi ++) {
-                  float *tempA = &A(m+mi*4,0,K);
-                  for (int ni = 0; ni < 2; ni++) {
-                     float *tempB = &B(0,n+ni*4,N);
-                     process4x4(tempA, tempB, c, M, N, K, m, n);
-                 }
-             }
-
+			for (int mi = 0; mi < 2;mi ++) {
+     			 for (int ni = 0; ni < 2; ni++) {
+					float *tempA = &A(m+mi*4,0,K);
+					float *tempB = &B(0,n+ni*4,N);
+					process4x4(tempA, tempB, c, M, N, K, m, n);
+				}
+			}
 		}
 	}
+}
+
+void chongpaiA(float *originP, float *aimto, int column, int size){
+
+	for(int c=0; c < size; c += 4) {
+		for(int i=0; i < 4; i++) {
+			*(aimto + 16*c/4 + i) = *(originP  + c +i);
+			*(aimto + 16*c/4 + 4 + i) = *(originP + column + c +i);
+			*(aimto + 16*c/4 + 8 * i) = *(originP + column*2 +c +i);
+			*(aimto + 16*c/4 + 12 * i) = *(originP + column*3 +c+i);
+		}
+	}
+}
+
+void chongpaiB(float *originP, float *aimto, int column, int size) {
+	for(int c=0; c < size; c ++) {                  
+	 	*(aimto + c*4) = *(originP + c*column + 0);
+		*(aimto + c*4 + 1) = *(originP + c*column + 1);
+		*(aimto + c*4 + 2) = *(originP + c*column + 2);
+		*(aimto + c*4 + 3) = *(originP + c*column + 3);
+	}
+}
+
+void process1(float *a, float *b, float *c, int M, int N, int K, float *arrayA, float *arrayB) {
+    for(int m = 0; m < M; m += 4) {
+        float *tempA = &A(m,0,K);
+		chongpaiA(tempA,&arrayA[m*K],K,M);
+        for(int n=0; n < N; n += 4) {
+            float *tempB = &B(0,n,N);
+			chongpaiB(tempB,&arrayB[m * N],N,K);
+            process4x4(&arrayA[m*K], &arrayB[m * N], c, M, N, K, m, n);
+        }
+    }
 }
 
 int main() {
@@ -138,12 +266,18 @@ int main() {
 		float *b = (float *) malloc(sizeof(float) * kk * nn);
 		float *c = (float *) malloc(sizeof(float) * mm * nn);
 	
+		
+		float *arrayA = (float *)malloc(mm*kk * sizeof(float));
+		float *arrayB= (float *)malloc(kk*nn * sizeof(float));
+		memset(arrayA, 0, mm*kk * sizeof(float));
+		memset(arrayB, 0, mm*kk * sizeof(float));
+
 		randArray(a, mm, kk);
 		randArray(b, kk, nn);
 		struct timeval start;
 		gettimeofday(&start, NULL);
 
-		process(a, b, c, mm, nn, kk);
+		process1(a, b, c, mm, nn, kk, arrayA, arrayB);
 	
 		struct timeval end;
 		gettimeofday(&end, NULL);
